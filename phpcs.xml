@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<ruleset name="Custom Rules">
+    <description>Project coding standards</description>
+
+    <!-- Include specific coding standards -->
+    <rule ref="PSR12" />
+
+    <!-- Ignore the vendor folder -->
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>node_modules/*</exclude-pattern>
+
+    <!-- Include source code -->
+    <file>src</file>
+    <file>app</file>
+</ruleset>

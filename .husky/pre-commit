@@ -1,0 +1,20 @@
+# cat > .husky/commit-msg <<'EOF'
+# scripts/verify-commit-msg.sh "$1"
+# EOF
+# chmod +x .husky/commit-msg
+# # npx lint-staged
+# # Run PHP_CodeSniffer on staged PHP files
+# # vendor/bin/phpcs
+# # Get the list of staged changes
+# FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+# # Exit early if no PHP files have changed
+# if [ -z "$FILES" ]; then
+#   exit 0
+# fi
+
+# # Check if the staged PHP files follow the coding standards
+# echo "$FILES" | grep -E '\.php$' | xargs vendor/bin/phpcs --ignore=vendor/*,node_modules/* . --standard=PSR12
+# # Run Prettier on staged frontend files (.js, .ts, .json, .md)
+# # ✅ Run Prettier on supported files (.php, .js, .ts, .json, .md)
+# echo "$FILES" | grep -E '\.(php|js|ts|json|md)$' | grep -vE '^vendor/|^node_modules/' | xargs -r npx prettier --write
