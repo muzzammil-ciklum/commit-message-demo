@@ -16,16 +16,13 @@ jobs:
 
       - name: Get commit messages in PR range
         run: |
-          echo "Fetching commit messages between base and head..."
+          echo "Fetching base branch..."
           git fetch origin ${{ github.event.pull_request.base.ref }}
 
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          echo "Getting commit messages between base and head..."
+          git log --pretty=format:%s origin/${{ github.event.pull_request.base.ref }}..HEAD > commit_messages.txt
 
-          echo "Base SHA: $BASE_SHA"
-          echo "Head SHA: $HEAD_SHA"
-
-          git log "$BASE_SHA..$HEAD_SHA" --pretty=format:%s > commit_messages.txt
+          echo "Commit count: $(wc -l < commit_messages.txt)"
           echo "Collected commit messages:"
           cat commit_messages.txt
 
@@ -36,6 +33,7 @@ jobs:
           INVALID=0
 
           while IFS= read -r COMMIT_MSG; do
+            # Skip merge commits
             if echo "$COMMIT_MSG" | grep -qE "^Merge [a-f0-9]{7,} into [a-f0-9]{7,}$"; then
               echo "ℹ️ Skipping merge commit: '$COMMIT_MSG'"
               continue
