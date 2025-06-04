@@ -10,27 +10,32 @@ jobs:
 
     steps:
       - name: Checkout code with full history
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Fetch base branch
-        run: git fetch origin main
-
-      - name: Get commit messages
-        id: get_commits
+      - name: Get commit messages in PR range
         run: |
-          echo "Fetching commit messages from PR..."
-          git log origin/main..HEAD --pretty=format:%s > commit_messages.txt
+          echo "Fetching commit messages between base and head..."
+          git fetch origin ${{ github.event.pull_request.base.ref }}
 
-      - name: Check commit message format
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Base SHA: $BASE_SHA"
+          echo "Head SHA: $HEAD_SHA"
+
+          git log "$BASE_SHA..$HEAD_SHA" --pretty=format:%s > commit_messages.txt
+          echo "Collected commit messages:"
+          cat commit_messages.txt
+
+      - name: Validate commit message format
         run: |
-          echo "Checking commit messages..."
+          echo "Validating commit message format..."
           PATTERN="^(STORY|BUG|TASK)/MAC-[0-9]+: .+"
           INVALID=0
 
           while IFS= read -r COMMIT_MSG; do
-            # Skip merge commits like "Merge abc123 into def456"
             if echo "$COMMIT_MSG" | grep -qE "^Merge [a-f0-9]{7,} into [a-f0-9]{7,}$"; then
               echo "ℹ️ Skipping merge commit: '$COMMIT_MSG'"
               continue
@@ -38,12 +43,17 @@ jobs:
 
             if ! echo "$COMMIT_MSG" | grep -Eq "$PATTERN"; then
               echo "❌ Invalid commit message: '$COMMIT_MSG'"
-              echo "✅ Expected format: STORY|BUG|TASK/MAC-<number>: <message>"
-              echo "Example: TASK/MAC-1234: Add login feature"
+              echo "✅ Expected: STORY|BUG|TASK/MAC-<number>: <message>"
+              echo "💡 Example: TASK/MAC-1234: Add login feature"
               INVALID=1
+            else
+              echo "✅ Valid: '$COMMIT_MSG'"
             fi
           done < commit_messages.txt
 
           if [ "$INVALID" -eq 1 ]; then
+            echo "🔴 Commit message format check failed."
             exit 1
+          else
+            echo "🟢 All commit messages are valid!"
           fi
